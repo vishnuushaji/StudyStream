@@ -1,0 +1,87 @@
+BUILD TASK — Full implementation (follow spec exactly)
+
+Overview
+You will build a small fullstack project that completes these four tasks exactly as described below. Deliver production-ready code, deployment instructions, and the runtime URLs/screenshots requested in the deliverables. Prioritize clarity, reliability, and a clean front-end design. Use modern tech (suggested stack below) unless you have a strong reason to change — but document your choices.
+
+Stack (must use this unless documented otherwise):
+- Backend: Node.js + Express
+- Database: Neon PostgreSQL (MANDATORY) — use this connection string:
+  postgresql://neondb_owner:npg_ipEL9UJAO7VM@ep-round-dawn-adtmf9sb-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+- File storage: AWS S3 (or GCP/Azure if easier)
+- Frontend: React (Vite or CRA)
+- Hosting: Deploy backend + static frontend on cloud (AWS/GCP/Azure). Provide console screenshots.
+- Misc: qrcode for QR generation, multer for uploads, csv-stringify for CSV export, cors, dotenv
+
+Project Requirements (must implement all)
+
+TASK 1 — Landing Page & Registration
+1. Landing page form → collects name, email, phone.
+2. Save into Neon Postgres DB table `registrations(id SERIAL, name TEXT, email TEXT, phone TEXT, created_at TIMESTAMP DEFAULT NOW(), ip TEXT, user_agent TEXT)`.
+3. After registration → show confirmation page with:
+   - Hosted video (NOT YouTube ripping; instead host on S3 or upload a CC-licensed ad)
+   - Download button triggers video file download.
+4. CSV Report endpoint `/report.csv?key=SECRET` → streams all registrations as CSV.
+
+TASK 2 — Upload Photo Page
+1. Upload PNG (only PNG, max 5MB).
+2. Store in S3.
+3. Generate signed URL for direct download.
+4. Show QR code → scanning downloads the image to phone.
+
+TASK 3 — Upload Photo API
+1. POST /api/upload-photo → accepts PNG, uploads to S3, returns JSON:
+   {
+     "filename": "xyz.png",
+     "download_url": "signed-url",
+     "expires_in_seconds": 3600
+   }
+2. No QR code needed.
+3. Provide API docs (OpenAPI or README + Postman collection).
+
+TASK 4 — Hosting
+1. Deploy frontend + backend + API to AWS/GCP/Azure.
+2. Provide:
+   - Live URLs for Task 1 & Task 2
+   - Report URL for Task 1
+   - Live API endpoint for Task 3
+   - Cloud console screenshots of running backend, Neon DB connection, and S3 bucket.
+
+Deliverables
+- URLs for Task 1 & Task 2
+- Report URL (CSV)
+- API docs + Postman collection
+- Cloud screenshots
+- Repo with source + README (setup, env vars, migrations, testing)
+
+Extra Credit
+- Pixel-perfect front-end for Task 1 (Pizza Hut / Pepsi / KFC theme)
+- Secure error handling, file size/type checks
+- Rate limiting + logging
+- Basic auth on report URL
+- Unit tests for backend functions
+
+DB Note (MANDATORY)
+- All data must be stored in the provided **Neon PostgreSQL DB**.
+- Use the exact connection string:
+  postgresql://neondb_owner:npg_ipEL9UJAO7VM@ep-round-dawn-adtmf9sb-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+- Handle connection pooling (pg library with Pool).
+- Include DB migration scripts (SQL or Knex/Prisma).
+
+Security / Legal
+- Do NOT rip YouTube videos. Instead, host your own ad video file in S3.
+- Sanitize and validate all uploads.
+- Protect CSV report with secret key in query string.
+- Use signed URLs with short expiry.
+
+Testing checklist
+- Register form → Neon DB entry visible
+- Report CSV works
+- Video plays + downloads from hosted source
+- Upload PNG → QR shows → phone downloads file
+- API upload → JSON download_url works in Postman
+
+Submission must include:
+- Repo URL
+- Live URLs
+- Screenshots
+- Postman collection
