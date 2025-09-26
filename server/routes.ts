@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { s3Service } from "./services/s3";
+import { supabaseStorageService } from "./services/supabase";
 import { localStorageService } from "./services/local-storage";
 import { qrService } from "./services/qr";
 import { uploadMiddleware, handleUploadError } from "./middleware/upload";
@@ -69,11 +69,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { buffer, originalname, mimetype, size } = req.file;
       const ip = req.ip || req.connection.remoteAddress;
-      
+
       // Choose storage service based on available credentials
-      const useS3 = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
-      const { key, url } = useS3 
-        ? await s3Service.uploadFile(buffer, originalname, mimetype)
+      const useSupabase = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY;
+      const { key, url } = useSupabase
+        ? await supabaseStorageService.uploadFile(buffer, originalname, mimetype)
         : await localStorageService.uploadFile(buffer, originalname, mimetype);
       
       // Save upload record to database
@@ -84,10 +84,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         file_size: (size / 1024 / 1024).toFixed(2) + ' MB',
       }, ip);
 
+      // Generate QR code for the download URL
+      const qrCode = await qrService.generateQRCode(url);
+
       res.json({
         filename: upload.filename,
         download_url: url,
-        expires_in_seconds: 3600
+        expires_in_seconds: 3600,
+        qr_code: qrCode
       });
     } catch (error) {
       console.error('Upload error:', error);
@@ -104,14 +108,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const uploads = await storage.getRecentUploads(10);
       
       // Generate fresh signed URLs for each upload
-      const useS3 = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+      const useSupabase = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY;
       const uploadsWithUrls = await Promise.all(
         uploads.map(async (upload) => {
-          const downloadUrl = useS3
-            ? await s3Service.getSignedDownloadUrl(upload.s3_key)
+          const downloadUrl = useSupabase
+            ? await supabaseStorageService.getSignedDownloadUrl(upload.s3_key)
             : await localStorageService.getSignedDownloadUrl(upload.s3_key);
           const qrCode = await qrService.generateQRCode(downloadUrl);
-          
+
           return {
             ...upload,
             download_url: downloadUrl,
@@ -137,7 +141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Upload not found" });
       }
       
-      const downloadUrl = await s3Service.getSignedDownloadUrl(upload.s3_key);
+      const useSupabase = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY;
+      const downloadUrl = useSupabase
+        ? await supabaseStorageService.getSignedDownloadUrl(upload.s3_key)
+        : await localStorageService.getSignedDownloadUrl(upload.s3_key);
       const qrCode = await qrService.generateQRCode(downloadUrl);
       
       res.json({
@@ -189,6 +196,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('CSV report error:', error);
       res.status(500).json({ error: "Failed to generate report" });
+    }
+  });
+
+  // Get video URL for confirmation page
+  app.get("/api/video", async (req, res) => {
+    try {
+      // For demo purposes, use a sample video URL
+      // In production, this would be a signed URL from Supabase Storage
+      const videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
+      res.json({
+        video_url: videoUrl,
+        expires_in_seconds: 86400
+      });
+    } catch (error) {
+      console.error('Video URL generation error:', error);
+      res.status(500).json({ error: "Failed to get video URL" });
     }
   });
 

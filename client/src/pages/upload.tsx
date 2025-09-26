@@ -12,6 +12,7 @@ interface UploadResult {
   filename: string;
   download_url: string;
   expires_in_seconds: number;
+  qr_code?: string;
 }
 
 interface UploadWithMetadata extends UploadResult {
@@ -216,16 +217,24 @@ export default function UploadPage() {
                   </div>
                 </div>
 
-                {/* QR Code Placeholder */}
+                {/* QR Code */}
                 <div className="text-center">
                   <h4 className="text-lg font-semibold text-card-foreground mb-4">Mobile Download</h4>
                   <div className="bg-white p-6 rounded-xl border border-border inline-block mb-4">
-                    <div className="w-40 h-40 bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
-                      <div className="text-center">
-                        <QrCode className="text-4xl text-gray-400 mb-2 mx-auto" />
-                        <p className="text-xs text-gray-500">QR Code</p>
+                    {uploadResult.qr_code ? (
+                      <img
+                        src={uploadResult.qr_code}
+                        alt="QR Code for download"
+                        className="w-40 h-40"
+                      />
+                    ) : (
+                      <div className="w-40 h-40 bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                        <div className="text-center">
+                          <QrCode className="text-4xl text-gray-400 mb-2 mx-auto" />
+                          <p className="text-xs text-gray-500">Generating...</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Scan this QR code with your phone to download the image directly to your device.
@@ -274,9 +283,10 @@ export default function UploadPage() {
                       >
                         <Download className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
+                        onClick={() => window.open(upload.qr_code, '_blank')}
                         data-testid={`button-qr-${index}`}
                       >
                         <QrCode className="w-4 h-4" />

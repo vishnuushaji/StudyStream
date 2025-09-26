@@ -1,17 +1,34 @@
+import { useState, useEffect } from "react";
 import { CheckCircle, Download, Upload, Play, Volume2, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function ConfirmationPage() {
   const [, setLocation] = useLocation();
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchVideoUrl = async () => {
+      try {
+        const response = await apiRequest("GET", "/api/video");
+        const data = await response.json();
+        setVideoUrl(data.video_url);
+      } catch (error) {
+        console.error('Failed to fetch video URL:', error);
+      }
+    };
+
+    fetchVideoUrl();
+  }, []);
 
   const handleDownloadVideo = async () => {
+    if (!videoUrl) return;
+
     try {
-      // This would download the video file from S3
-      // For now, we'll simulate the download
       const link = document.createElement('a');
-      link.href = '#'; // This would be the S3 signed URL for the video
+      link.href = videoUrl;
       link.download = 'welcome-video.mp4';
       link.click();
     } catch (error) {
@@ -38,42 +55,23 @@ export default function ConfirmationPage() {
           {/* Video Section */}
           <Card className="shadow-xl mb-8 overflow-hidden">
             <div className="aspect-video relative bg-gray-900">
-              {/* Video placeholder - in production this would load from S3 */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <img 
-                  src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080"
-                  alt="Food preparation video thumbnail"
+              {videoUrl ? (
+                <video
+                  controls
                   className="w-full h-full object-cover"
-                />
-                
-                {/* Video Controls Overlay */}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="bg-black/60 rounded-lg p-4 backdrop-blur-sm">
-                    <div className="flex items-center justify-between text-white">
-                      <div className="flex items-center space-x-3">
-                        <button className="hover:bg-white/20 rounded-full p-2 transition-colors">
-                          <Play className="text-lg" />
-                        </button>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm">0:00</span>
-                          <div className="w-32 h-1 bg-white/30 rounded-full">
-                            <div className="w-0 h-full bg-primary rounded-full"></div>
-                          </div>
-                          <span className="text-sm">2:30</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button className="hover:bg-white/20 rounded-full p-2 transition-colors">
-                          <Volume2 className="w-4 h-4" />
-                        </button>
-                        <button className="hover:bg-white/20 rounded-full p-2 transition-colors">
-                          <Maximize className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                  poster="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080"
+                >
+                  <source src={videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                    <p>Loading video...</p>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <CardContent className="p-8">
