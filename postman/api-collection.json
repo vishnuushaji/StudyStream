@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "FoodTech Platform API",
+    "description": "Complete API collection for FoodTech Platform with registration, photo upload, and reporting endpoints",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "register"]
+            },
+            "description": "Register a new user with name, email, and phone number"
+          },
+          "response": [
+            {
+              "name": "Successful Registration",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1234567890\"\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Registration successful\",\n  \"user_id\": 123,\n  \"redirect_url\": \"/confirmation\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Photo Upload",
+      "item": [
+        {
+          "name": "Upload Photo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": "",
+                  "description": "PNG image file (max 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/upload-photo",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload-photo"]
+            },
+            "description": "Upload a PNG image file to S3 and get a signed download URL"
+          },
+          "response": [
+            {
+              "name": "Successful Upload",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "photo",
+                      "type": "file",
+                      "src": "sample.png"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"filename\": \"abc123-sample.png\",\n  \"download_url\": \"https://s3.amazonaws.com/bucket/signed-url\",\n  \"expires_in_seconds\": 3600\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Recent Uploads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/uploads",
+              "host": ["{{base_url}}"],
+              "path": ["api", "uploads"]
+            },
+            "description": "Get list of recent uploads with download URLs and QR codes"
+          }
+        },
+        {
+          "name": "Get QR Code for Upload",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/uploads/{{upload_id}}/qr",
+              "host": ["{{base_url}}"],
+              "path": ["api", "uploads", "{{upload_id}}", "qr"]
+            },
+            "description": "Generate QR code for a specific upload"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "CSV Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/report.csv?key={{secret_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["report.csv"],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{secret_key}}",
+                  "description": "Secret key for accessing the report"
+                }
+              ]
+            },
+            "description": "Download CSV report of all registrations (requires secret key)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documentation",
+      "item": [
+        {
+          "name": "Download Postman Collection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/postman-collection",
+              "host": ["{{base_url}}"],
+              "path": ["api", "postman-collection"]
+            },
+            "description": "Download this Postman collection as JSON"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "secret_key",
+      "value": "SECRET",
+      "description": "Secret key for CSV report access"
+    },
+    {
+      "key": "upload_id",
+      "value": "1",
+      "description": "ID of an uploaded file"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { randomUUID } from "crypto";
+
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
+
+const BUCKET_NAME = process.env.S3_BUCKET_NAME || "foodtech-platform-uploads";
+
+export class S3Service {
+  async uploadFile(file: Buffer, originalFilename: string, mimeType: string): Promise<{ key: string; url: string }> {
+    const key = `uploads/${randomUUID()}-${originalFilename}`;
+    
+    const command = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      Body: file,
+      ContentType: mimeType,
+    });
+
+    await s3Client.send(command);
+    
+    // Generate signed URL for download (expires in 1 hour)
+    const downloadCommand = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+    
+    const signedUrl = await getSignedUrl(s3Client, downloadCommand, { expiresIn: 3600 });
+    
+    return {
+      key,
+      url: signedUrl,
+    };
+  }
+
+  async getSignedDownloadUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+    
+    return await getSignedUrl(s3Client, command, { expiresIn });
+  }
+}
+
+export const s3Service = new S3Service();
