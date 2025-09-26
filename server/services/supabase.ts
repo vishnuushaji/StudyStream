@@ -1,15 +1,17 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL?.trim();
+const supabaseKey = process.env.SUPABASE_ANON_KEY?.trim();
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
-// Client for public operations (uploads, signed URLs) - only create if credentials exist
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+// Client for public operations (uploads, signed URLs) - only create if credentials exist and are valid
+const supabase = (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http'))
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 // Client for admin operations (if needed)
-const supabaseAdmin = supabaseUrl && supabaseServiceRoleKey
+const supabaseAdmin = (supabaseUrl && supabaseServiceRoleKey && supabaseUrl.startsWith('http'))
   ? createClient(supabaseUrl, supabaseServiceRoleKey)
   : supabase;
 
