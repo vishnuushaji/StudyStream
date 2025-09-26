@@ -102,7 +102,7 @@ npm start
 2. Connect your GitHub repository
 3. Configure the service:
    - **Runtime**: Node
-   - **Build Command**: `npm ci && npm run build`
+   - **Build Command**: `npm install --production=false && npm run build`
    - **Start Command**: `npm start`
 4. Add environment variables in Render dashboard (same as `.env` file)
 5. Deploy
