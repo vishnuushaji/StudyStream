@@ -1,7 +1,9 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { s3Service } from "./services/s3";
+import { localStorageService } from "./services/local-storage";
 import { qrService } from "./services/qr";
 import { uploadMiddleware, handleUploadError } from "./middleware/upload";
 import { insertRegistrationSchema } from "@shared/schema";
@@ -28,6 +30,9 @@ const reportLimiter = rateLimit({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Static file serving for uploads
+  app.use('/uploads', express.static('uploads'));
+
   // Registration endpoint
   app.post("/api/register", registrationLimiter, async (req, res) => {
     try {
@@ -65,8 +70,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { buffer, originalname, mimetype, size } = req.file;
       const ip = req.ip || req.connection.remoteAddress;
       
-      // Upload to S3
-      const { key, url } = await s3Service.uploadFile(buffer, originalname, mimetype);
+      // Choose storage service based on available credentials
+      const useS3 = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+      const { key, url } = useS3 
+        ? await s3Service.uploadFile(buffer, originalname, mimetype)
+        : await localStorageService.uploadFile(buffer, originalname, mimetype);
       
       // Save upload record to database
       const upload = await storage.createUpload({
@@ -96,9 +104,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const uploads = await storage.getRecentUploads(10);
       
       // Generate fresh signed URLs for each upload
+      const useS3 = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
       const uploadsWithUrls = await Promise.all(
         uploads.map(async (upload) => {
-          const downloadUrl = await s3Service.getSignedDownloadUrl(upload.s3_key);
+          const downloadUrl = useS3
+            ? await s3Service.getSignedDownloadUrl(upload.s3_key)
+            : await localStorageService.getSignedDownloadUrl(upload.s3_key);
           const qrCode = await qrService.generateQRCode(downloadUrl);
           
           return {
