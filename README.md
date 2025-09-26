@@ -34,7 +34,7 @@ A complete fullstack application built with Node.js, Express, React, Neon Postgr
 ### 1. Clone and Install Dependencies
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/vishnuushaji/StudyStream.git>
 cd StudyStream
 npm install
 ```
@@ -102,7 +102,7 @@ npm start
 2. Connect your GitHub repository
 3. Configure the service:
    - **Runtime**: Node
-   - **Build Command**: `npm run build`
+   - **Build Command**: `npm ci && npm run build`
    - **Start Command**: `npm start`
 4. Add environment variables in Render dashboard (same as `.env` file)
 5. Deploy
