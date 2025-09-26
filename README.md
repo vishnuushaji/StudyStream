@@ -19,7 +19,7 @@ A complete fullstack application built with Node.js, Express, React, Neon Postgr
 - **Storage**: Supabase Storage
 - **Frontend**: React + Vite + TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
-- **Deployment**: Render (Web Service + Static Site)
+- **Deployment**: Render (Web Service + Static Site) - Used instead of AWS/Azure/GCP due to account unavailability
 
 ## 📋 Prerequisites
 
@@ -95,6 +95,8 @@ npm start
 ```
 
 ## 🚀 Deployment to Render
+
+**Note:** Render is used as the hosting platform instead of AWS, Azure, or Google Cloud due to account unavailability. Render provides equivalent functionality with Web Services and Static Sites for fullstack deployment.
 
 ### Backend Deployment (Web Service)
 
